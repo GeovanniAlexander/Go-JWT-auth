@@ -101,11 +101,23 @@ func User(c *fiber.Ctx) error {
 		c.Status(fiber.StatusUnauthorized)
 		data.Success = false
 		data.Errors = append(data.Errors, err.Error())
-		c.JSON(data)
+		return c.JSON(data)
 	}
 	claims := token.Claims.(*jwt.StandardClaims)
 	var user models.User
 	database.DB.Where("id = ?", claims.Issuer).First(&user)
 	data.Users = append(data.Users, user)
+	return c.JSON(data)
+}
+
+func LogOut(c *fiber.Ctx) error {
+	cookie := fiber.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+	}
+	c.Cookie(&cookie)
+	data := Data{Success: true, Errors: make([]string, 0)}
 	return c.JSON(data)
 }
